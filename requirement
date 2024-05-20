@@ -1,0 +1,17 @@
+clarabel==0.7.1
+cvxpy==1.5.1
+ecos==2.0.13
+joblib==1.4.2
+numpy==1.26.4
+osqp==0.6.5
+pandas==2.2.2
+pyportfolioopt==1.5.5
+python-dateutil==2.9.0.post0
+pytz==2024.1
+qdldl==0.1.7.post2
+scikit-learn==1.4.2
+scipy==1.11.4
+scs==3.2.4.post1
+six==1.16.0
+threadpoolctl==3.5.0
+tzdata==2024.1
