@@ -2,7 +2,7 @@ import os
 import json
 import yfinance as yf
 import pandas as pd
-import numpy as np
+import random
 
 
 def get_stock_data(code, start, end, min_volumn=10):
@@ -19,7 +19,7 @@ def get_stock_data(code, start, end, min_volumn=10):
     return data
 
 def stock_download(
-    dic,
+    symbols,
     start="2001-01-01",
     end="2021-11-30",
     len_data=5000,
@@ -29,12 +29,12 @@ def stock_download(
     os.makedirs(download_dir, exist_ok=True)
     count = 0
     stock_dict = {}
-    for symbol in dic:
+    for symbol in symbols:
         symbol = symbol if symbol != "BRK.B" else "BRK-B"
         data = get_stock_data(symbol, start, end)
         if data is not None and len(data) > len_data:
             data.to_csv(download_dir + f"{symbol}.csv")
-            stock_dict[symbol] = dic[symbol]
+            stock_dict[symbol] = symbol
             count += 1
             print(symbol)
         else:
@@ -60,7 +60,9 @@ if __name__ == "__main__":
     config = json.load(open("data/data_config.json", "r", encoding="utf8"))
     snp500 = pd.read_csv("data/snp500.csv")
     snp500.loc[snp500.Symbol == "BRK.B", "Symbol"] = "BRK-B"
-    snp500 = {tup[2]: tup[1] for tup in snp500.values.tolist()}
+    snp500 = [tup[2] for tup in snp500.values.tolist()]
+    random.shuffle(snp500)
+
     stock_pair = stock_download(
         snp500, start=config["START"], end=config["END"], 
         len_data=config["LEN_DATA"], n_stock=config["N_STOCK"], download_dir='data/stocks/'
