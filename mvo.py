@@ -1,23 +1,61 @@
 import pandas as pd
-import pypfopt
-from pypfopt import risk_models
-from pypfopt import EfficientFrontier
-from pypfopt import expected_returns
+import numpy as np
+from pypfopt import risk_models, EfficientFrontier, expected_returns
 
 RISKFREE_RATE = 0.03
+TESTING_DATE = "2018-01-01"
+REBALANCE_FREQ = 5 # trading days 
 
-prices = pd.read_csv("data/return_df.csv", index_col="Date")
+def tangential_port (test_index) :
 
-# Calculate expected returns and sample covariance
-mu = expected_returns.mean_historical_return(prices)
-S = risk_models.CovarianceShrinkage(prices).ledoit_wolf()
+    prices = pd.read_csv("data/return_df.csv")
+    prices = prices.loc[:test_index]
+    prices = prices.drop('Date', axis=1)
 
-# Optimize for maximal Sharpe ratio, which is the tangential portfolio
-ef = EfficientFrontier(mu, S)
-raw_weights = ef.max_sharpe(RISKFREE_RATE)
-cleaned_weights = ef.clean_weights()
-ef.save_weights_to_file("data/weights.csv")  # saves to file
-print(cleaned_weights)
+    # Calculate expected returns and sample covariance
+    mu = expected_returns.mean_historical_return(prices)
+    S = risk_models.CovarianceShrinkage(prices).ledoit_wolf()
 
-ef.portfolio_performance(verbose=True, risk_free_rate=RISKFREE_RATE)
+    # Optimize for maximal Sharpe ratio, which is the tangential portfolio
+    ef = EfficientFrontier(mu, S)
+    ef.max_sharpe(RISKFREE_RATE)
+    cleaned_weights = ef.clean_weights()
 
+    # ef.portfolio_performance(verbose=True, risk_free_rate=RISKFREE_RATE)
+    return cleaned_weights
+
+def row_propagate (weight) :
+    last_row = None
+    for i in range(len(weight)) :
+        if np.isnan(weight.iloc[i,1]): 
+            if last_row is None : 
+                raise Exception("First row must not be NaN")
+            weight.iloc[i,1:] = last_row.iloc[1:]
+        last_row = weight.iloc[i]
+    return weight
+
+
+def index_rebalancing_dates (freq) : 
+    prices = pd.read_csv('data/return_df.csv')
+    date = prices[['Date']]
+    last_index = date.iloc[-1].name
+    date = date[date['Date'] >= TESTING_DATE]
+    first_index = date.iloc[0].name # type: ignore
+    return range(first_index, last_index, freq)
+
+
+if __name__ == "__main__" :
+    weight = pd.read_csv('data/return_df.csv')
+    weight = weight[weight['Date'] >= TESTING_DATE]
+    weight.iloc[:,1:] = np.nan
+    
+    indices = index_rebalancing_dates(REBALANCE_FREQ)
+    for i in indices: 
+        w = tangential_port(i)
+        for tick in w: 
+            weight.loc[i, tick] = w[tick]
+
+    weight = row_propagate(weight)
+    weight.set_index('Date', inplace=True)
+    weight.to_csv('./data/mvo.csv')
+    print("weight saved to mvo.csv")
