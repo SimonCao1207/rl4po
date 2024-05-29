@@ -1,10 +1,8 @@
-import pandas as pd
+from collections import OrderedDict
 import numpy as np
+import pandas as pd
 from pypfopt import risk_models, EfficientFrontier, expected_returns
-
-RISKFREE_RATE = 0.03
-TESTING_DATE = "2018-01-01"
-REBALANCE_FREQ = 5 # trading days 
+from settings import *
 
 def tangential_port (test_index) :
 
@@ -21,7 +19,13 @@ def tangential_port (test_index) :
     ef.max_sharpe(RISKFREE_RATE)
     cleaned_weights = ef.clean_weights()
 
-    # ef.portfolio_performance(verbose=True, risk_free_rate=RISKFREE_RATE)
+    ret, vol, _ = ef.portfolio_performance(risk_free_rate=RISKFREE_RATE)
+
+    # no shorting kelly
+    kelly = max(min((ret - RISKFREE_RATE) / vol, 1), 0) # type: ignore
+
+    cleaned_weights = OrderedDict((key, kelly * cleaned_weights[key]) for key in cleaned_weights) # type: ignore
+
     return cleaned_weights
 
 def row_propagate (weight) :
@@ -35,7 +39,7 @@ def row_propagate (weight) :
     return weight
 
 
-def index_rebalancing_dates (freq) : 
+def index_of_rebalancing_dates (freq) : 
     prices = pd.read_csv('data/return_df.csv')
     date = prices[['Date']]
     last_index = date.iloc[-1].name
@@ -49,7 +53,7 @@ if __name__ == "__main__" :
     weight = weight[weight['Date'] >= TESTING_DATE]
     weight.iloc[:,1:] = np.nan
     
-    indices = index_rebalancing_dates(REBALANCE_FREQ)
+    indices = index_of_rebalancing_dates(MVO_REBALANCE_FREQ)
     for i in indices: 
         w = tangential_port(i)
         for tick in w: 
