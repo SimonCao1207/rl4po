@@ -28,7 +28,7 @@ def get_daily_return (weight_df):
 
         ret.append(port_value)
 
-    return pd.DataFrame(ret, index=price.index[price.index > TESTING_DATE], columns=['port_value']) # type: ignore
+    return pd.DataFrame(ret, index=price.index[price.index > TEST_START_DATE], columns=['port_value']) # type: ignore
 
 if __name__ == "__main__":
     mvo_weight = pd.read_csv('./data/mvo.csv', index_col='Date')

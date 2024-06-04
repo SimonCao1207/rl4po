@@ -43,14 +43,14 @@ def index_of_rebalancing_dates (freq) :
     prices = pd.read_csv('data/return_df.csv')
     date = prices[['Date']]
     last_index = date.iloc[-1].name
-    date = date[date['Date'] >= TESTING_DATE]
+    date = date[date['Date'] >= TEST_START_DATE]
     first_index = date.iloc[0].name # type: ignore
     return range(first_index, last_index, freq)
 
 
 if __name__ == "__main__" :
     weight = pd.read_csv('data/return_df.csv')
-    weight = weight[weight['Date'] >= TESTING_DATE]
+    weight = weight[weight['Date'] >= TEST_START_DATE]
     weight.iloc[:,1:] = np.nan
     
     indices = index_of_rebalancing_dates(MVO_REBALANCE_FREQ)
