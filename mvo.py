@@ -61,5 +61,5 @@ if __name__ == "__main__" :
 
     weight = row_propagate(weight)
     weight.set_index('Date', inplace=True)
-    weight.to_csv('./data/mvo.csv')
+    weight.to_csv('./results_mvo/mvo.csv')
     print("weight saved to mvo.csv")

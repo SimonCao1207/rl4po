@@ -1,11 +1,13 @@
 import numpy as np
 import pandas as pd
 from settings import *
+import quantstats as qs
+import matplotlib.pyplot as plt
 
 DAILY_RISK_FREE = (1 + RISKFREE_RATE) ** (1/252) - 1 # APPROXIMATION, to 252 days a year
 
 def get_daily_return (weight_df):
-    price = pd.read_csv('./data/return_df.csv', index_col='Date')
+    price = pd.read_csv('./data/return_df.csv', index_col='Date', parse_dates=['Date'])
 
     assert np.all(price.columns == mvo_weight.columns)
 
@@ -13,6 +15,7 @@ def get_daily_return (weight_df):
     port = np.zeros(weight_df.shape[1])
     cash = 1
 
+    port_val = []
     ret = []
     for index, row in weight_df.iterrows():
         p = price.loc[index].to_numpy()
@@ -26,13 +29,23 @@ def get_daily_return (weight_df):
 
         if port_value > 5: exit()
 
-        ret.append(port_value)
-
-    return pd.DataFrame(ret, index=price.index[price.index > TEST_START_DATE], columns=['port_value']) # type: ignore
+        if len(port_val) == 0: 
+            ret.append(port_value - 1)
+        else: 
+            ret.append(port_value - port_val[-1])
+        port_val.append(port_value)
+        
+    return pd.DataFrame(
+        np.array([ret, port_val]).T, 
+        index=price.index[price.index > TEST_START_DATE], 
+        columns=['return', 'port_value']                        # type: ignore
+    ) 
 
 if __name__ == "__main__":
-    mvo_weight = pd.read_csv('./data/mvo.csv', index_col='Date')
+    mvo_weight = pd.read_csv('./results_mvo/mvo.csv', index_col='Date', parse_dates=['Date'])
     mvo_daily_return = get_daily_return(mvo_weight)
-    mvo_daily_return.to_csv('./data/mvo_analysis.csv')
+    mvo_daily_return.to_csv('./results_mvo/mvo_analysis.csv')
 
+    mvo = mvo_daily_return['return']
+    qs.reports.html(mvo, output="./results_mvo/mvo.html")
 
