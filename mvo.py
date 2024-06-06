@@ -21,8 +21,7 @@ def tangential_port (test_index) :
 
     ret, vol, _ = ef.portfolio_performance(risk_free_rate=RISKFREE_RATE)
 
-    # no shorting kelly
-    kelly = max(min((ret - RISKFREE_RATE) / vol, 1), 0) # type: ignore
+    kelly = (ret - RISKFREE_RATE) / vol 
 
     cleaned_weights = OrderedDict((key, kelly * cleaned_weights[key]) for key in cleaned_weights) # type: ignore
 

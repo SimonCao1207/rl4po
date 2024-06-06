@@ -42,10 +42,14 @@ def get_daily_return (weight_df):
     ) 
 
 if __name__ == "__main__":
-    mvo_weight = pd.read_csv('./results_mvo/mvo.csv', index_col='Date', parse_dates=['Date'])
+    mvo_weight = pd.read_csv('./results_mvo/10-mvo.csv', index_col='Date', parse_dates=['Date'])
     mvo_daily_return = get_daily_return(mvo_weight)
-    mvo_daily_return.to_csv('./results_mvo/mvo_analysis.csv')
+    mvo_daily_return.to_csv('./results_mvo/10-mvo_analysis.csv')
 
     mvo = mvo_daily_return['return']
-    qs.reports.html(mvo, output="./results_mvo/mvo.html")
+
+    rl_result = pd.read_csv('./results_rl/df_account_value_ensemble.csv', index_col='date', parse_dates=['date'])
+    rl = rl_result['daily_return']
+
+    qs.reports.html(rl, benchmark=mvo, output="./compare.html")
 
