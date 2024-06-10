@@ -8,8 +8,11 @@ DAILY_RISK_FREE = (1 + RISKFREE_RATE) ** (1/252) - 1 # APPROXIMATION, to 252 day
 
 def get_daily_return (weight_df):
     price = pd.read_csv('./data/return_df.csv', index_col='Date', parse_dates=['Date'])
+    price = price.loc[price.index >= TEST_START_DATE]
+    price = price.loc[price.index <= TEST_END_DATE] 
 
-    assert np.all(price.columns == mvo_weight.columns)
+    weight_df = weight_df.loc[weight_df.index >= TEST_START_DATE]
+    weight_df = weight_df.loc[weight_df.index <= TEST_END_DATE]
 
     w = np.zeros(weight_df.shape[1])
     port = np.zeros(weight_df.shape[1])
@@ -42,14 +45,14 @@ def get_daily_return (weight_df):
     ) 
 
 if __name__ == "__main__":
-    mvo_weight = pd.read_csv('./results_mvo/10-mvo_trim.csv', index_col='Date', parse_dates=['Date'])
+    mvo_weight = pd.read_csv('./results_mvo/10-mvo.csv', index_col='Date', parse_dates=['Date'])
     mvo_daily_return = get_daily_return(mvo_weight)
     mvo_daily_return.to_csv('./results_mvo/10-mvo_analysis.csv')
 
     mvo = mvo_daily_return['return']
     qs.reports.html(mvo, output="./mvo.html")
 
-    rl_result = pd.read_csv('./results_rl/df_account_value_ensemble.csv', index_col='date', parse_dates=['date'])
+    rl_result = pd.read_csv('./results_rl/df_account_value.csv', index_col='date', parse_dates=['date'])
     rl = rl_result['daily_return']
 
     qs.reports.html(rl, benchmark=mvo, output="./compare.html")
